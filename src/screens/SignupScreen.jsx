@@ -9,7 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  Alert
+  
 } from 'react-native';
 import {TextInput} from 'react-native-paper';
 import Button from '../components/Button';
@@ -37,13 +37,12 @@ const SignupScreen = () => {
           const userId = userCredential.user.uid;
     
           await firestore().collection('users').doc(userId).set({
-            // password: password,
             email: email,
             createdAt: firestore.FieldValue.serverTimestamp(),
           });
     
           Alert.alert('Registration successful! Please log in.');
-          navigation.navigate('Login')
+          navigation.navigate('Home')
         } catch (err) {
           setError(err.message);
         }
@@ -122,7 +121,7 @@ const SignupScreen = () => {
               width: width,
               marginTop: 36,
             }}>
-            <TouchableOpacity>
+            <TouchableOpacity onPress={()=>navigation.navigate('Login')} >
               <Text style={{color: '#fff'}}>Create Account</Text>
             </TouchableOpacity>
             <TouchableOpacity>

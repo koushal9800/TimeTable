@@ -12,6 +12,7 @@ import {TextInput} from 'react-native-paper';
 import Button from '../components/Button';
 import auth from '@react-native-firebase/auth';
 import AuthContext from '../store/AuthContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 let width = Dimensions.get('window').width;
@@ -25,36 +26,24 @@ const LoginScreen = () => {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-//   const handleLogin = async () => {
-//     setLoading(true);
-//     setError('');
 
-//     try {
-//       await auth().signInWithEmailAndPassword(email, password);
-//       navigation.reset({
-//         index: 0,
-//         routes: [{ name: 'Home' }],
-//       });
-//     } catch (err) {
-//       setError(err.message);
-//       Alert.alert('Login Failed', err.message);
-//     }
-
-//     setLoading(false);
-//   };
 
 const handleLogin = async () => {
     setLoading(true);
     setError('');
 
     try {
-      await auth().signInWithEmailAndPassword(email, password);
-      if (user) {
-        navigation.reset({
-          index: 0,
-          routes: [{ name: 'Home' }],
-        });
-      }
+      const userCredential =  await auth().signInWithEmailAndPassword(email, password);
+      const loggedUser = userCredential.user
+   
+await AsyncStorage.setItem('user',JSON.stringify(loggedUser))
+
+        // navigation.reset({
+        //   index: 0,
+        //   routes: [{ name: 'Home' }],
+        // });
+        navigation.navigate('Home')
+      
     } catch (err) {
       setError(err.message);
     }
