@@ -1,15 +1,20 @@
 import { useNavigation } from '@react-navigation/native';
-import React from 'react';
+import React, { useState } from 'react';
 import {
   View,
   Text,
   ImageBackground,
   Dimensions,
   TouchableOpacity,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  Alert
 } from 'react-native';
 import {TextInput} from 'react-native-paper';
 import Button from '../components/Button';
-
+import auth from '@react-native-firebase/auth';
+import firestore from '@react-native-firebase/firestore';
 
 
 let width = Dimensions.get('window').width;
@@ -17,8 +22,41 @@ let height = Dimensions.get('window').height;
 
 const SignupScreen = () => {
     const navigation = useNavigation()
+
+    const [email,setEmail] = useState('')
+    const [password,setPassword] = useState('')
+    const [loading,setLoading] = useState(false)
+    const [error,setError] = useState('')
+
+    const handleRegister = async () => {
+        setLoading(true);
+        setError('');
+    
+        try {
+          const userCredential = await auth().createUserWithEmailAndPassword(email, password);
+          const userId = userCredential.user.uid;
+    
+          await firestore().collection('users').doc(userId).set({
+            // password: password,
+            email: email,
+            createdAt: firestore.FieldValue.serverTimestamp(),
+          });
+    
+          Alert.alert('Registration successful! Please log in.');
+          navigation.navigate('Login')
+        } catch (err) {
+          setError(err.message);
+        }
+    
+        setLoading(false);
+      };
   return (
-    <View>
+    <KeyboardAvoidingView 
+    behavior={Platform.OS === 'ios'?'padding':'height'}
+    >
+        <ScrollView contentContainerStyle={{ flexGrow:1 }} >
+    <View style={{ flex:1 }} >
+        
       <ImageBackground
         source={require('../assests/signupBackground.jpeg')}
         style={{
@@ -43,6 +81,8 @@ const SignupScreen = () => {
           }}>
           <TextInput
             placeholder='Username'
+            value={email}
+            onChangeText={setEmail}
             style={{
               width: width * 0.8,
               backgroundColor: 'transparent',
@@ -58,6 +98,8 @@ const SignupScreen = () => {
 
 <TextInput
             placeholder='Password'
+            value={password}
+            onChangeText={setPassword}
             style={{
               width: width * 0.8,
               backgroundColor: 'transparent',
@@ -71,7 +113,7 @@ const SignupScreen = () => {
             placeholderTextColor='#fff'
           />
           
-          <Button backgroundColor={'transparent'} borderColor={'#fff'} borderWidth={2} text={'SIGN IN'} textColor={'#fff'} onPress={()=>navigation.navigate('Home')} />
+          <Button backgroundColor={'transparent'} borderColor={'#fff'} borderWidth={2} text={'SIGN IN'} textColor={'#fff'} onPress={handleRegister} />
 
           <View
             style={{
@@ -89,7 +131,10 @@ const SignupScreen = () => {
           </View>
         </View>
       </ImageBackground>
+      
     </View>
+    </ScrollView>
+    </KeyboardAvoidingView>
   );
 };
 

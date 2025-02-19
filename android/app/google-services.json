@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "506934077686",
+    "project_id": "calendarapp-b5c71",
+    "storage_bucket": "calendarapp-b5c71.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:506934077686:android:5bc4d29f50fce4e82824d7",
+        "android_client_info": {
+          "package_name": "com.timetable"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD3ElVnG07bSI6AoZXYnwctALgFR_0DW7Y"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

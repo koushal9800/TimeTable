@@ -1,5 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
-import React from 'react';
+import React,{useState,useContext} from 'react';
 import {
   View,
   Text,
@@ -10,13 +10,57 @@ import {
 } from 'react-native';
 import {TextInput} from 'react-native-paper';
 import Button from '../components/Button';
+import auth from '@react-native-firebase/auth';
+import AuthContext from '../store/AuthContext';
 
 
 let width = Dimensions.get('window').width;
 let height = Dimensions.get('window').height;
 
 const LoginScreen = () => {
-    const navigation = useNavigation()
+    const { user } = useContext(AuthContext);
+  const navigation = useNavigation();
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(false);
+
+//   const handleLogin = async () => {
+//     setLoading(true);
+//     setError('');
+
+//     try {
+//       await auth().signInWithEmailAndPassword(email, password);
+//       navigation.reset({
+//         index: 0,
+//         routes: [{ name: 'Home' }],
+//       });
+//     } catch (err) {
+//       setError(err.message);
+//       Alert.alert('Login Failed', err.message);
+//     }
+
+//     setLoading(false);
+//   };
+
+const handleLogin = async () => {
+    setLoading(true);
+    setError('');
+
+    try {
+      await auth().signInWithEmailAndPassword(email, password);
+      if (user) {
+        navigation.reset({
+          index: 0,
+          routes: [{ name: 'Home' }],
+        });
+      }
+    } catch (err) {
+      setError(err.message);
+    }
+
+    setLoading(false);
+  };
   return (
     <View style={{flex: 1}}>
       <ImageBackground
@@ -33,6 +77,8 @@ const LoginScreen = () => {
 
         <TextInput
           placeholder="Email"
+          value={email}
+              onChangeText={setEmail}
           style={{
             width: width * 0.8,
             backgroundColor: 'transparent',
@@ -47,6 +93,9 @@ const LoginScreen = () => {
 
         <TextInput
           placeholder="Password"
+          value={password}
+              onChangeText={setPassword}
+              secureTextEntry
           style={{
             width: width * 0.8,
             backgroundColor: 'transparent',
@@ -59,7 +108,7 @@ const LoginScreen = () => {
           placeholderTextColor="#fff"
         />
         
-        <Button backgroundColor={'#fff'} borderColor={'transparent'} borderWidth={0} text={'SIGN IN'} textColor={'#000'} onPress={()=>navigation.navigate('Home')} />
+        <Button backgroundColor={'#fff'} borderColor={'transparent'} borderWidth={0} text={'SIGN IN'} textColor={'#000'} onPress={handleLogin} />
 
         <TouchableOpacity
           style={{
