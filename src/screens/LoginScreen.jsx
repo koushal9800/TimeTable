@@ -1,3 +1,4 @@
+import { useNavigation } from '@react-navigation/native';
 import React from 'react';
 import {
   View,
@@ -5,14 +6,17 @@ import {
   ImageBackground,
   TouchableOpacity,
   Image,
-  Dimensions
+  Dimensions,
 } from 'react-native';
 import {TextInput} from 'react-native-paper';
+import Button from '../components/Button';
 
-let width = Dimensions.get('window').width
-let height = Dimensions.get('window').height
+
+let width = Dimensions.get('window').width;
+let height = Dimensions.get('window').height;
 
 const LoginScreen = () => {
+    const navigation = useNavigation()
   return (
     <View style={{flex: 1}}>
       <ImageBackground
@@ -28,43 +32,37 @@ const LoginScreen = () => {
         </Text>
 
         <TextInput
-          label="Email"
-          style={{width: width * 0.8 , backgroundColor: 'transparent', color: 'red'}}
+          placeholder="Email"
+          style={{
+            width: width * 0.8,
+            backgroundColor: 'transparent',
+          }}
+          contentStyle={{color: '#fff'}}
           cursorColor="#fff"
           underlineColor="#fff"
           activeUnderlineColor="#fff"
           textColor="#fff"
-          selectionColor="red"
+          placeholderTextColor="#fff"
         />
 
         <TextInput
-          label="Password"
-          style={{width: width * 0.8, backgroundColor: 'transparent', color: 'red'}}
+          placeholder="Password"
+          style={{
+            width: width * 0.8,
+            backgroundColor: 'transparent',
+          }}
+          contentStyle={{color: '#fff'}}
           cursorColor="#fff"
           underlineColor="#fff"
           activeUnderlineColor="#fff"
           textColor="#fff"
-          selectionColor="red"
+          placeholderTextColor="#fff"
         />
-        <TouchableOpacity
-          style={{
-            backgroundColor: '#fff',
-
-            padding: 16,
-            alignItems: 'center',
-            width: width * 0.8,
-            marginTop: 36,
-          }}
-          // onPress={onPress}
-        >
-          <Text style={{color: '#000', fontSize: 16, fontWeight: '600'}}>
-            SIGN IN
-          </Text>
-        </TouchableOpacity>
+        
+        <Button backgroundColor={'#fff'} borderColor={'transparent'} borderWidth={0} text={'SIGN IN'} textColor={'#000'} onPress={()=>navigation.navigate('Home')} />
 
         <TouchableOpacity
           style={{
-           
             flexDirection: 'row',
             backgroundColor: '#4263a6',
 
@@ -99,9 +97,9 @@ const LoginScreen = () => {
             justifyContent: 'space-around',
             bottom: 20,
             position: 'absolute',
-            width:width
+            width: width,
           }}>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={()=>navigation.navigate('Signup')} >
             <Text style={{color: '#fff'}}>Create Account</Text>
           </TouchableOpacity>
           <TouchableOpacity>

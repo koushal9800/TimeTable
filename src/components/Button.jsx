@@ -1,21 +1,28 @@
 import React from "react";
-import { View,Text,TouchableOpacity } from "react-native";
+import { View,Text,TouchableOpacity,Dimensions } from "react-native";
 
-const Button = ({text,onPress,backgroundColor})=>{
+let width = Dimensions.get('window').width;
+
+
+const Button = ({text,onPress,backgroundColor,borderWidth,borderColor,textColor})=>{
     return (
         <View>
-            <TouchableOpacity style={{
-                // backgroundColor:'#0A79DF',
-                backgroundColor:backgroundColor,
-                borderRadius:20,
-                padding:12,
-                alignItems:'center',
-                width:'100%'
-            }} 
-            onPress={onPress}
-            >
-                <Text style={{ color:'#fff', fontSize:16, fontWeight:'600' }} >{text}</Text>
-            </TouchableOpacity>
+            <TouchableOpacity
+          style={{
+            backgroundColor: backgroundColor,
+            borderWidth: borderWidth,
+            borderColor: borderColor,
+            padding: 16,
+            alignItems: 'center',
+            width: width * 0.8,
+            marginTop: 36,
+          }}
+          onPress={onPress}
+        >
+          <Text style={{color: textColor, fontSize: 16, fontWeight: '600'}}>
+            {text}
+          </Text>
+        </TouchableOpacity>
         </View>
     )
 }
