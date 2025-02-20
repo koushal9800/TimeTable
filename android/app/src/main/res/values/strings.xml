@@ -1,3 +1,9 @@
 <resources>
     <string name="app_name">TimeTable</string>
+
+<string name="facebook_app_id">1944267092649240</string>
+<string name="fb_login_protocol_scheme">fb1234</string>
+<string name="facebook_client_token">f6ee5ac7f1dc55fc38035999b198d63f</string>
+
+
 </resources>

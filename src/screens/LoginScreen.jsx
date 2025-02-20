@@ -11,45 +11,59 @@ import {
 import {TextInput} from 'react-native-paper';
 import Button from '../components/Button';
 import auth from '@react-native-firebase/auth';
-import AuthContext from '../store/AuthContext';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 
+import { LoginButton, AccessToken } from 'react-native-fbsdk-next';
+import { Formik } from 'formik';
+import * as yup from 'yup';
 
 let width = Dimensions.get('window').width;
 let height = Dimensions.get('window').height;
 
+
+const loginSchema = yup.object().shape({
+  email: yup.string().email('Invalid email').required('Email is required'),
+  password: yup.string().required('Password is required'),
+});
+
+
 const LoginScreen = () => {
-    const { user } = useContext(AuthContext);
+    
   const navigation = useNavigation();
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+ 
 
-
-
-const handleLogin = async () => {
-    setLoading(true);
-    setError('');
-
+  const handleFacebookLogin = async () => {
     try {
-      const userCredential =  await auth().signInWithEmailAndPassword(email, password);
-      const loggedUser = userCredential.user
-   
-await AsyncStorage.setItem('user',JSON.stringify(loggedUser))
+        // Once signed in, get the user AccessToken
+        const data = await AccessToken.getCurrentAccessToken();
 
-        // navigation.reset({
-        //   index: 0,
-        //   routes: [{ name: 'Home' }],
-        // });
-        navigation.navigate('Home')
-      
-    } catch (err) {
-      setError(err.message);
+        if (!data) {
+            throw 'Something went wrong obtaining access token';
+        }
+
+        // Create a Firebase credential with the AccessToken
+        const facebookCredential = auth.FacebookAuthProvider.credential(data.accessToken);
+        const userCredential = await auth().signInWithCredential(facebookCredential);
+        console.log('User signed in with Facebook!', userCredential.user);
+        navigation.navigate('Home');
+    } catch (error) {
+        console.log('Facebook login or Firebase credential failed:', error);
     }
-
-    setLoading(false);
   };
+
+  const handleLogin = (values) => {
+    auth().signInWithEmailAndPassword(values.email, values.password)
+        .then((userCredential) => {
+            console.log('Logged in:', userCredential.user);
+            navigation.navigate('Home');
+        })
+        .catch((error) => {
+            Alert.alert('Authentication Failed', error.message);
+        });
+};
+
+
+
+
   return (
     <View style={{flex: 1}}>
       <ImageBackground
@@ -63,11 +77,19 @@ await AsyncStorage.setItem('user',JSON.stringify(loggedUser))
         <Text style={{fontSize: 44, color: '#fff', fontWeight: 'bold'}}>
           Clutch
         </Text>
+        <Formik
+                initialValues={{ email: '', password: '' }}
+                onSubmit={handleLogin}
+                validationSchema={loginSchema}
+            >
+                {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
+                  <>
 
         <TextInput
           placeholder="Email"
-          value={email}
-              onChangeText={setEmail}
+          onChangeText={handleChange('email')}
+                            onBlur={handleBlur('email')}
+                            value={values.email}
           style={{
             width: width * 0.8,
             backgroundColor: 'transparent',
@@ -80,10 +102,13 @@ await AsyncStorage.setItem('user',JSON.stringify(loggedUser))
           placeholderTextColor="#fff"
         />
 
+{touched.email && errors.email && <Text style={{ color:'red' }} >{errors.email}</Text>}
+
         <TextInput
           placeholder="Password"
-          value={password}
-              onChangeText={setPassword}
+          onChangeText={handleChange('password')}
+          onBlur={handleBlur('password')}
+          value={values.password}
               secureTextEntry
           style={{
             width: width * 0.8,
@@ -96,38 +121,15 @@ await AsyncStorage.setItem('user',JSON.stringify(loggedUser))
           textColor="#fff"
           placeholderTextColor="#fff"
         />
+         {touched.password && errors.password && <Text style={{ color:'red' }} >{errors.password}</Text>}
+        <Button backgroundColor={'#fff'} borderColor={'transparent'} borderWidth={0} text={'SIGN IN'} textColor={'#000'} onPress={handleSubmit} />
+
         
-        <Button backgroundColor={'#fff'} borderColor={'transparent'} borderWidth={0} text={'SIGN IN'} textColor={'#000'} onPress={handleLogin} />
 
-        <TouchableOpacity
-          style={{
-            flexDirection: 'row',
-            backgroundColor: '#4263a6',
-
-            padding: 16,
-            alignItems: 'center',
-            width: width * 0.8,
-            marginTop: 36,
-            justifyContent: 'center',
-          }}
-          // onPress={onPress}
-        >
-          <Image
-            source={require('../assests/facebook.jpeg')}
-            style={{width: 24, height: 24}}
-            resizeMode="contain"
-          />
-
-          <Text
-            style={{
-              color: '#fff',
-              fontSize: 16,
-              fontWeight: '600',
-              marginLeft: 12,
-            }}>
-            SIGN IN WITH FACEBOOK
-          </Text>
-        </TouchableOpacity>
+<LoginButton
+      onLoginFinished={handleFacebookLogin}
+      onLogoutFinished={() => console.log("logout.")}
+      />
 
         <View
           style={{
@@ -144,6 +146,8 @@ await AsyncStorage.setItem('user',JSON.stringify(loggedUser))
             <Text style={{color: '#fff'}}>Forgot Password</Text>
           </TouchableOpacity>
         </View>
+        </>
+                )}</Formik>
       </ImageBackground>
     </View>
   );

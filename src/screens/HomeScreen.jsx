@@ -1,8 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
 import { View, Text, Button, FlatList, SectionList, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
-import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import { useNavigation } from "@react-navigation/native";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { LoginManager } from 'react-native-fbsdk-next';
+import auth from '@react-native-firebase/auth';
 
 const { width } = Dimensions.get("window");
 
@@ -43,27 +45,37 @@ const getCurrentWeekDates = (startDate = new Date()) => {
 
 const HomeScreen = ({ route }) => {
   const navigation = useNavigation();
-  const [user, setUser] = useState(route.params.user);
+ 
   const [dates, setDates] = useState(getCurrentWeekDates());
   const [selectedDate, setSelectedDate] = useState(getCurrentDateISO());
   const [showPicker, setShowPicker] = useState(false);
   const sectionListRef = useRef(null);
   const dateListRef = useRef(null);
 
-  useEffect(() => {
-    const getUserData = async () => {
-      const storedUser = await AsyncStorage.getItem("user");
-      if (storedUser) {
-        setUser(JSON.parse(storedUser));
-      }
-    };
-    getUserData();
-  }, []);
+  const [userEmail, setUserEmail] = useState('');
+   
 
-  const handleLogout = async () => {
-    await AsyncStorage.removeItem("user");
-    navigation.navigate("Login");
+    useEffect(() => {
+      const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
+      return subscriber;
+    }, []);
+
+    function onAuthStateChanged(user) {
+      setUserEmail(user ? user.email=== null ? user.displayName : user.email  : '');
+      
+    }
+  const handleLogout = () => {
+    auth().signOut().then(() => {
+      
+      LoginManager.logOut();
+    }).catch((error) => {
+      Alert.alert('Logout Failed', error.message);
+    });
   };
+
+  
+
+  
 
   const shiftWeek = (direction) => {
     const baseDate = new Date(dates[0]);
@@ -101,8 +113,14 @@ const HomeScreen = ({ route }) => {
 
   return (
     <View style={styles.container}>
-      <Text>Welcome, {user?.email}</Text>
-      <Button title="Logout" onPress={handleLogout} />
+       
+       
+      {/* <Text>Welcome, {user?.email}</Text> */}
+       <Text>Welcome to the Home Screen, {userEmail}!</Text>
+      <Button title="Logout" onPress={handleLogout} /> 
+
+
+        
 
       {/* Week Navigation */}
       <View style={styles.topBar}>

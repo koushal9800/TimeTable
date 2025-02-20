@@ -14,41 +14,48 @@ import {
 import {TextInput} from 'react-native-paper';
 import Button from '../components/Button';
 import auth from '@react-native-firebase/auth';
-import firestore from '@react-native-firebase/firestore';
+import { Formik } from 'formik';
+import * as yup from 'yup';
 
 
 let width = Dimensions.get('window').width;
 let height = Dimensions.get('window').height;
 
+const SignupSchema = yup.object().shape({
+  email: yup.string().email('Invalid email').required('Email is required'),
+  password: yup
+    .string()
+    .required('Password is required')
+    .min(8, 'Password must be at least 8 characters long')
+    .matches(/[a-z]/, 'Password must have at least one lowercase character')
+    .matches(/[A-Z]/, 'Password must have at least one uppercase character')
+    .matches(/[0-9]/, 'Password must have at least one number')
+    .matches(/[@$!%*#?&]/, 'Password must have at least one special character'),
+  confirmPassword: yup
+    .string()
+    .oneOf([yup.ref('password'), null], 'Passwords must match')
+    .required('Confirm password is required'),
+});
+
 const SignupScreen = () => {
     const navigation = useNavigation()
 
-    const [email,setEmail] = useState('')
-    const [password,setPassword] = useState('')
-    const [loading,setLoading] = useState(false)
-    const [error,setError] = useState('')
+    const handleSignup = async (values, actions) => {
+      if (values.password !== values.confirmPassword) {
+          actions.setFieldError('confirmPassword', "Passwords don't match");
+          return;
+      }
+      auth().createUserWithEmailAndPassword(values.email, values.password)
+      .then((userCredential) => {
+          console.log('Signed up:', userCredential.user);
+          navigation.navigate('Login');
+      })
+      .catch((error) => {
+          Alert.alert('Signup Failed', error.message);
+      });
+  };
 
-    const handleRegister = async () => {
-        setLoading(true);
-        setError('');
-    
-        try {
-          const userCredential = await auth().createUserWithEmailAndPassword(email, password);
-          const userId = userCredential.user.uid;
-    
-          await firestore().collection('users').doc(userId).set({
-            email: email,
-            createdAt: firestore.FieldValue.serverTimestamp(),
-          });
-    
-          Alert.alert('Registration successful! Please log in.');
-          navigation.navigate('Home')
-        } catch (err) {
-          setError(err.message);
-        }
-    
-        setLoading(false);
-      };
+
   return (
     <KeyboardAvoidingView 
     behavior={Platform.OS === 'ios'?'padding':'height'}
@@ -70,6 +77,13 @@ const SignupScreen = () => {
         <Text style={{fontSize: 20, color: '#EEC213', fontWeight: 'bold'}}>
           Forge a new path.
         </Text>
+        <Formik
+                initialValues={{ email: '', password: '', confirmPassword: '' }}
+                onSubmit={handleSignup}
+                validationSchema={SignupSchema}
+            >
+            {({ handleChange, handleBlur, handleSubmit, values, errors, touched }) => (
+           
 
         <View
           style={{
@@ -80,8 +94,9 @@ const SignupScreen = () => {
           }}>
           <TextInput
             placeholder='Username'
-            value={email}
-            onChangeText={setEmail}
+            onChangeText={handleChange('email')}
+            onBlur={handleBlur('email')}
+            value={values.email}
             style={{
               width: width * 0.8,
               backgroundColor: 'transparent',
@@ -95,10 +110,13 @@ const SignupScreen = () => {
             placeholderTextColor='#fff'
           />
 
+{touched.email && errors.email && <Text style={{ color:'red' }} >{errors.email}</Text>}
+
 <TextInput
             placeholder='Password'
-            value={password}
-            onChangeText={setPassword}
+            onChangeText={handleChange('password')}
+            onBlur={handleBlur('password')}
+            value={values.password}
             style={{
               width: width * 0.8,
               backgroundColor: 'transparent',
@@ -111,8 +129,31 @@ const SignupScreen = () => {
             textColor="#fff"
             placeholderTextColor='#fff'
           />
+
+{touched.password && errors.password && <Text style={{ color:'red' }}>{errors.password}</Text>}
+
+<TextInput
+            placeholder='Confirm Password'
+            onChangeText={handleChange('confirmPassword')}
+            onBlur={handleBlur('confirmPassword')}
+            value={values.confirmPassword}
+
+            style={{
+              width: width * 0.8,
+              backgroundColor: 'transparent',
+              
+            }}
+            contentStyle={{ color:'#fff', }}
+            cursorColor="#fff"
+            underlineColor="#fff"
+            activeUnderlineColor="#fff"
+            textColor="#fff"
+            placeholderTextColor='#fff'
+          />
+
+{touched.confirmPassword && errors.confirmPassword && <Text style={{ color:'red' }}>{errors.confirmPassword}</Text>}
           
-          <Button backgroundColor={'transparent'} borderColor={'#fff'} borderWidth={2} text={'SIGN IN'} textColor={'#fff'} onPress={handleRegister} />
+          <Button backgroundColor={'transparent'} borderColor={'#fff'} borderWidth={2} text={'SIGN IN'} textColor={'#fff'} onPress={handleSubmit} />
 
           <View
             style={{
@@ -129,6 +170,8 @@ const SignupScreen = () => {
             </TouchableOpacity>
           </View>
         </View>
+         )}
+         </Formik>
       </ImageBackground>
       
     </View>
