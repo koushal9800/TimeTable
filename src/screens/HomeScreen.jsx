@@ -94,6 +94,7 @@ const HomeScreen = ({ route }) => {
       return subscriber;
     }, []);
 
+
     function onAuthStateChanged(user) {
       setUserEmail(user ? user.email=== null ? user.displayName : user.email  : '');
       
@@ -107,36 +108,72 @@ const HomeScreen = ({ route }) => {
     });
   };
 
+  useEffect(() => {
+  const today = getCurrentDateISO();
+  const newWeekDates = getCurrentWeekDates(new Date());
+
+  setDates(newWeekDates);
+  setSelectedDate(today);  
+
   
+  setTimeout(() => {
+    const todayIndex = newWeekDates.indexOf(today);
+    if (todayIndex !== -1) {
+      dateListRef.current?.scrollToIndex({ index: todayIndex, animated: true });
+      scrollViewRef.current?.scrollTo({ x: todayIndex * width, animated: true });
+    }
+  }, 100);
+}, []);
+
 
   
 
   const shiftWeek = (direction) => {
     const baseDate = new Date(dates[0]);
     baseDate.setDate(baseDate.getDate() + direction * 7);
-    const newDates = getCurrentWeekDates(baseDate);
-    setDates(newDates);
-    setSelectedDate(newDates[0]);
-    sectionListRef.current?.scrollToIndex({ index: 0, animated: true });
-    dateListRef.current?.scrollToIndex({ index: 0, animated: true });
+    const newWeekDates = getCurrentWeekDates(baseDate);
+  
+    const today = getCurrentDateISO();
+  
+   
+    const newSelectedDate = newWeekDates.includes(today) ? today : newWeekDates[0];
+  
+    setDates(newWeekDates);
+    setSelectedDate(newSelectedDate);
+  
+    
+    setTimeout(() => {
+      dateListRef.current?.scrollToIndex({ index: newWeekDates.indexOf(newSelectedDate), animated: true });
+      scrollViewRef.current?.scrollTo({ x: newWeekDates.indexOf(newSelectedDate) * width, animated: true });
+    }, 100);  
   };
+  
+  
+  
 
   const handleDateChange = (date) => {
     setShowPicker(false);
     if (date) {
-      setSelectedDate(date.toISOString().split("T")[0]);
-      setDates(getCurrentWeekDates(date));
+      const newSelectedDate = date.toISOString().split("T")[0];
+      const newWeekDates = getCurrentWeekDates(date);
+      
+      setDates(newWeekDates);
+      setSelectedDate(newSelectedDate);
+  
+      
+      setTimeout(() => {
+        const newIndex = newWeekDates.indexOf(newSelectedDate);
+        dateListRef.current?.scrollToIndex({ index: newIndex, animated: true });
+        scrollViewRef.current?.scrollTo({ x: newIndex * width, animated: true });
+      }, 100);
     }
   };
+  
+  
 
   
 
-  const handleTimetableScroll = (event) => {
-    const pageIndex = Math.round(event.nativeEvent.contentOffset.x / width);
-    setSelectedDate(dates[pageIndex]);
-
-    dateListRef.current?.scrollToIndex({ index: pageIndex, animated: true });
-  };
+ 
 
   const scrollViewRef = useRef(null);
  
@@ -168,7 +205,7 @@ const HomeScreen = ({ route }) => {
     <View style={styles.container}>
        
        
-      {/* <Text>Welcome, {user?.email}</Text> */}
+     
        <Text>Welcome to the Home Screen, {userEmail}!</Text>
       <Button title="Logout" onPress={handleLogout} /> 
 
@@ -258,12 +295,11 @@ const styles = StyleSheet.create({
   topBar: { flexDirection: "row", 
   justifyContent: "space-between", 
   alignItems: "center", 
-  // paddingVertical: 10 ,
-  // backgroundColor:'red',
+ 
   marginVertical:12,
   borderWidth:1,
   borderRadius:4,
-  // height:56
+  
 },
   arrow: { fontSize: 24, fontWeight: "bold" },
   weekText: { fontSize: 16, fontWeight: "bold" },
