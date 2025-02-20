@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { View, Text, Button, FlatList, SectionList, TouchableOpacity, StyleSheet, Dimensions } from "react-native";
+import { View, Text, Button, FlatList, SectionList, TouchableOpacity, StyleSheet, Dimensions,ScrollView } from "react-native";
 
 import { useNavigation } from "@react-navigation/native";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
@@ -25,15 +25,49 @@ const timetableData = {
     { title: "Break", time: "11:55 - 12:35" },
   ],
   "2025-02-20": [
-    { title: "HINDI", time: "08:30 - 09:15" },
-    { title: "English", time: "09:20 - 10:05" },
+    { title: "English", time: "08:30 - 09:15" },
+    { title: "Break", time: "09:20 - 10:05" },
+    { title: "CHEM", time: "10:05 - 10:20" },
+    { title: "MATH", time: "10:20 - 11:05" },
+    { title: "SSC", time: "11:10 - 11:55" },
+    { title: "Break", time: "11:55 - 12:35" },
+  ],
+  "2025-02-21": [
+    { title: "MATH", time: "08:30 - 09:15" },
+    { title: "SSC", time: "09:20 - 10:05" },
     { title: "Break", time: "10:05 - 10:20" },
-    { title: "PHY", time: "10:20 - 11:05" },
+    { title: "English", time: "10:20 - 11:05" },
+    { title: "PHY", time: "11:10 - 11:55" },
+    { title: "Break", time: "11:55 - 12:35" },
+  ],
+  "2025-02-22": [
+    { title: "English", time: "08:30 - 09:15" },
+    { title: "Break", time: "09:20 - 10:05" },
+    { title: "CHEM", time: "10:05 - 10:20" },
+    { title: "MATH", time: "10:20 - 11:05" },
+    { title: "SSC", time: "11:10 - 11:55" },
+    { title: "Break", time: "11:55 - 12:35" },
+  ],
+  "2025-02-23": [
+    { title: "MATH", time: "08:30 - 09:15" },
+    { title: "SSC", time: "09:20 - 10:05" },
+    { title: "Break", time: "10:05 - 10:20" },
+    { title: "English", time: "10:20 - 11:05" },
+    { title: "PHY", time: "11:10 - 11:55" },
+    { title: "Break", time: "11:55 - 12:35" },
+  ],
+  "2025-02-24": [
+    { title: "English", time: "08:30 - 09:15" },
+    { title: "Break", time: "09:20 - 10:05" },
+    { title: "CHEM", time: "10:05 - 10:20" },
+    { title: "MATH", time: "10:20 - 11:05" },
+    { title: "SSC", time: "11:10 - 11:55" },
+    { title: "Break", time: "11:55 - 12:35" },
   ],
 };
 
 const getCurrentWeekDates = (startDate = new Date()) => {
-  const dayOfWeek = (startDate.getDay() + 6) % 7; // Adjust to make Monday = 0
+  const dayOfWeek = (startDate.getDay() + 6) % 7; 
   const startOfWeek = new Date(startDate);
   startOfWeek.setDate(startOfWeek.getDate() - dayOfWeek);
   return Array.from({ length: 7 }, (_, i) => {
@@ -95,20 +129,39 @@ const HomeScreen = ({ route }) => {
     }
   };
 
-  const handleDateSelection = (date) => {
-    setSelectedDate(date);
-    const index = dates.indexOf(date);
-    if (index !== -1) {
-      sectionListRef.current?.scrollToIndex({ index, animated: true });
-      dateListRef.current?.scrollToIndex({ index, animated: true });
-    }
-  };
+  
 
   const handleTimetableScroll = (event) => {
     const pageIndex = Math.round(event.nativeEvent.contentOffset.x / width);
     setSelectedDate(dates[pageIndex]);
 
     dateListRef.current?.scrollToIndex({ index: pageIndex, animated: true });
+  };
+
+  const scrollViewRef = useRef(null);
+ 
+  const handleScroll = (event) => {
+    const pageIndex = Math.round(event.nativeEvent.contentOffset.x / width);
+    setSelectedDate(dates[pageIndex]);
+
+ 
+    if (dateListRef.current) {
+      const offset = Math.max(0, pageIndex * 60 - width / 2 + 30);
+      dateListRef.current.scrollToOffset({ offset, animated: true });
+    }
+  };
+
+
+  const handleDateSelection = (date) => {
+    setSelectedDate(date);
+    const index = dates.indexOf(date);
+    if (index !== -1) {
+      scrollViewRef.current?.scrollTo({ x: index * width, animated: true });
+
+     
+      const offset = Math.max(0, index * 60 - width / 2 + 30);
+      dateListRef.current?.scrollToOffset({ offset, animated: true });
+    }
   };
 
   return (
@@ -124,15 +177,15 @@ const HomeScreen = ({ route }) => {
 
       {/* Week Navigation */}
       <View style={styles.topBar}>
-        <TouchableOpacity onPress={() => shiftWeek(-1)}>
+        <TouchableOpacity  style={{ flex:1, borderRightWidth:1,alignItems:'center', paddingVertical:6  }} onPress={() => shiftWeek(-1)}>
           <Text style={styles.arrow}>&lt;</Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => setShowPicker(true)}>
+        <TouchableOpacity style={{ flex:10,alignItems:'center',paddingVertical:6   }} onPress={() => setShowPicker(true)}>
           <Text style={styles.weekText}>
             {dates[0]} - {dates[6]}
           </Text>
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => shiftWeek(1)}>
+        <TouchableOpacity style={{ flex:1, borderLeftWidth:1,alignItems:'center',paddingVertical:6   }} onPress={() => shiftWeek(1)}>
           <Text style={styles.arrow}>&gt;</Text>
         </TouchableOpacity>
       </View>
@@ -170,42 +223,65 @@ const HomeScreen = ({ route }) => {
       />
 
       {/* Horizontal Timetable Scroll */}
-      <FlatList
+     
+
+      <ScrollView
+        ref={scrollViewRef}
         horizontal
         pagingEnabled
-        ref={sectionListRef}
-        data={dates}
-        keyExtractor={(item) => item}
-        onMomentumScrollEnd={handleTimetableScroll}
-        renderItem={({ item }) => (
-          <View style={{ width }}>
-            <SectionList
-              sections={[{ title: item, data: timetableData[item] || [] }]}
-              keyExtractor={(entry, index) => entry.title + index}
-              renderItem={({ item }) => (
-                <View style={styles.timetableItem}>
-                  <Text style={styles.subject}>{item.title}</Text>
-                  <Text style={styles.time}>{item.time}</Text>
-                </View>
-              )}
-            />
+        snapToInterval={width}
+        snapToAlignment="center"
+        showsHorizontalScrollIndicator={false}
+        onMomentumScrollEnd={handleScroll}
+      >
+        {dates.map((date) => (
+          <View key={date} style={{ width, alignItems: "center", justifyContent: "center" }}>
+            <Text style={styles.sectionHeader}>{date}</Text>
+            {timetableData[date]?.map((item, index) => (
+              <View key={index} style={styles.timetableItem}>
+                <Text style={styles.subject}>{item.title}</Text>
+                <Text style={styles.time}>{item.time}</Text>
+              </View>
+            )) || <Text style={{ textAlign: "center", marginTop: 20 }}>No Classes</Text>}
           </View>
-        )}
-      />
+        ))}
+      </ScrollView>
+
+
+
     </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 10, backgroundColor: "#fff" },
-  topBar: { flexDirection: "row", justifyContent: "space-between", alignItems: "center", paddingVertical: 10 },
+  topBar: { flexDirection: "row", 
+  justifyContent: "space-between", 
+  alignItems: "center", 
+  // paddingVertical: 10 ,
+  // backgroundColor:'red',
+  marginVertical:12,
+  borderWidth:1,
+  borderRadius:4,
+  // height:56
+},
   arrow: { fontSize: 24, fontWeight: "bold" },
   weekText: { fontSize: 16, fontWeight: "bold" },
-  dateItem: { padding: 10, marginHorizontal: 6, borderRadius: 20, backgroundColor: "#ddd", justifyContent: "space-around", alignItems: "center" },
+  dateItem: { padding: 10, marginHorizontal: 6, borderRadius: 20, backgroundColor: "#ddd", justifyContent: "space-around", alignItems: "center", height:120 },
   activeDate: { backgroundColor: "#007bff" },
-  timetableItem: { padding: 15, marginVertical: 5, backgroundColor: "#f0f0f0", borderRadius: 10 },
+  timetableItem: {
+    flexDirection:'row',
+    justifyContent:'space-between',
+   padding: 15,
+    marginVertical: 5, 
+    backgroundColor: "#f0f0f0", 
+    borderRadius: 10 ,
+    width:'60%',
+    alignSelf:'center'
+  },
   subject: { fontWeight: "bold", fontSize: 16 },
   time: { fontSize: 14, color: "gray" },
 });
 
 export default HomeScreen;
+
