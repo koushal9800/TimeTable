@@ -140,6 +140,14 @@ const HomeScreen = () => {
       console.log(error)
     }
   }
+  useEffect(() => {
+    const subscriber = auth().onAuthStateChanged((user) => {
+      if (user) {
+        setUser(user);
+      }
+    });
+    return subscriber;
+  }, []);
 
   function onAuthStateChanged(user) {
     setUserEmail(
