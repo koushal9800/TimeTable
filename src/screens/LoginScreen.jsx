@@ -1,5 +1,5 @@
 import {useNavigation} from '@react-navigation/native';
-import React from 'react';
+import React,{useEffect} from 'react';
 import {
   View,
   Text,
@@ -11,10 +11,10 @@ import {
 import {TextInput} from 'react-native-paper';
 import Button from '../components/Button';
 import auth from '@react-native-firebase/auth';
-
 import {LoginButton, AccessToken} from 'react-native-fbsdk-next';
 import {Formik} from 'formik';
 import * as yup from 'yup';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 let width = Dimensions.get('window').width;
 let height = Dimensions.get('window').height;
@@ -27,6 +27,30 @@ const loginSchema = yup.object().shape({
 const LoginScreen = () => {
   const navigation = useNavigation();
 
+  useEffect(()=>{
+    checkUser()
+  },[])
+
+  const checkUser = async () =>{
+    try{
+      const userData = AsyncStorage.getItem('user')
+      if(userData){
+        navigation.navigate('Home')
+      }
+    }  catch(error){
+      console.log(error)
+    }
+  }
+
+
+  const storeUserData = async (user) =>{
+        try {
+          AsyncStorage.setItem('user', JSON.stringify(user))
+        } catch(error){
+          console.log('Failed to load the Data', error)
+        }
+  }
+
   const handleFacebookLogin = async () => {
     try {
       const data = await AccessToken.getCurrentAccessToken();
@@ -38,11 +62,17 @@ const LoginScreen = () => {
       const facebookCredential = auth.FacebookAuthProvider.credential(
         data.accessToken,
       );
-      const userCredential = await auth().signInWithCredential(
-        facebookCredential,
-      );
-      console.log('User signed in with Facebook!', userCredential.user);
-      navigation.navigate('Home');
+     auth().signInWithCredential(facebookCredential)
+        .then( async userCredential=>{
+          console.log('User signed in with Facebook!', userCredential.user);
+          await storeUserData(userCredential.user)
+          navigation.navigate('Home');
+        } )
+        .catch(error => {
+          Alert.alert('Authentication Failed', error.message);
+        });
+      
+      
     } catch (error) {
       console.log('Facebook login or Firebase credential failed:', error);
     }
@@ -51,8 +81,9 @@ const LoginScreen = () => {
   const handleLogin = values => {
     auth()
       .signInWithEmailAndPassword(values.email, values.password)
-      .then(userCredential => {
+      .then(async userCredential => {
         console.log('Logged in:', userCredential.user);
+        await storeUserData(userCredential.user);
         navigation.navigate('Home');
       })
       .catch(error => {

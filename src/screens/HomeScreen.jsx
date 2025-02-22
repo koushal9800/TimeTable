@@ -13,6 +13,9 @@ import {LoginManager} from 'react-native-fbsdk-next';
 import auth from '@react-native-firebase/auth';
 import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
 import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityIcons';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useNavigation } from '@react-navigation/native';
+
 
 const {width} = Dimensions.get('window');
 
@@ -92,6 +95,9 @@ const HomeScreen = () => {
   const [showPicker, setShowPicker] = useState(false);
   const dateListRef = useRef(null);
   const scrollViewRef = useRef(null);
+  const [user, setUser] = useState(null);
+
+  const navigation = useNavigation()
 
   const getRandomColor = () => {
     const colors = [
@@ -108,25 +114,48 @@ const HomeScreen = () => {
   };
 
   useEffect(() => {
-    const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
-    return subscriber;
+    // const subscriber = auth().onAuthStateChanged(onAuthStateChanged);
+    // return subscriber;
+    getUserData()
   }, []);
+
+  const getUserData = async ()=>{
+    try{
+      const storedUser = await AsyncStorage.getItem('user')
+      if(storedUser){
+        setUser(JSON.parse(storedUser))
+      }
+    }catch(error) {
+      console.log(error)
+    }
+  }
+
+  const handleLogout = async ()=>{
+    try{
+      await auth().signOut()
+      await AsyncStorage.removeItem('user')
+      LoginManager.logOut()
+      navigation.navigate('Login')
+    }catch(error) {
+      console.log(error)
+    }
+  }
 
   function onAuthStateChanged(user) {
     setUserEmail(
       user ? (user.email === null ? user.displayName : user.email) : '',
     );
   }
-  const handleLogout = () => {
-    auth()
-      .signOut()
-      .then(() => {
-        LoginManager.logOut();
-      })
-      .catch(error => {
-        Alert.alert('Logout Failed', error.message);
-      });
-  };
+  // const handleLogout = () => {
+  //   auth()
+  //     .signOut()
+  //     .then(() => {
+  //       LoginManager.logOut();
+  //     })
+  //     .catch(error => {
+  //       Alert.alert('Logout Failed', error.message);
+  //     });
+  // };
 
   useEffect(() => {
     const today = getCurrentDateISO();
@@ -221,7 +250,7 @@ const HomeScreen = () => {
         }}>
         <View>
           <Text style={{fontSize: 20, fontWeight: 'bold'}}>WELCOME,</Text>
-          <Text style={{fontSize: 20, fontWeight: 'bold'}}>{userEmail}!</Text>
+          <Text style={{fontSize: 20, fontWeight: 'bold'}}>{user?.displayName || user?.email || 'User'}!</Text>
         </View>
 
         <TouchableOpacity
